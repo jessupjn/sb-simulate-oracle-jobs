@@ -49,7 +49,9 @@ const queuePubkey = isDevnet ? ON_DEMAND_DEVNET_QUEUE : ON_DEMAND_MAINNET_QUEUE;
   console.log(chalk.bold.yellowBright("Running simulation...\n"));
 
   // Print the jobs that are being run.
-  const jobJson = jobs.map((job) => JSON.stringify(job.toJSON())).join("\n");
+  const jobJson = jobs
+    .map((job) => JSON.stringify(job.toJSON(), null, 2))
+    .join("\n");
   console.log(chalk.bold.yellowBright("Job Json:"));
   console.log(jobJson);
   console.log();
@@ -90,6 +92,7 @@ const queuePubkey = isDevnet ? ON_DEMAND_DEVNET_QUEUE : ON_DEMAND_MAINNET_QUEUE;
     body: JSON.stringify({
       cluster: isDevnet ? "Devnet" : "Mainnet",
       jobs: serializedJobs,
+      include_receipts: true,
     }),
   });
 
@@ -108,19 +111,25 @@ const queuePubkey = isDevnet ? ON_DEMAND_DEVNET_QUEUE : ON_DEMAND_MAINNET_QUEUE;
   console.log("Using Crossbar on", env.crossbarUrl);
   const client = new CrossbarClient(env.crossbarUrl, true);
   const expectedFeedHash = FeedHash.compute(queueBytes, jobs);
-  const blah = await client.store(
+  const stored = await client.store(
     queuePubkey.toBase58(),
     jobs.map((j) => j.toJSON())
   );
-  console.log("Feedhash (Expected):", `0x` + expectedFeedHash.toString("hex"));
-  console.log("Feedhash (Actual):  ", blah.feedHash);
-  const simulate = await client.simulateFeeds([blah.feedHash]);
-
-  console.log(
-    JSON.stringify(
-      simulate.map((s) => s.results),
-      null,
-      2
-    )
-  );
+  const actualHex = stored.feedHash;
+  const expectedHex = `0x${expectedFeedHash.toString("hex")}`;
+  console.log("Feedhash (Expected):", expectedHex);
+  console.log("Feedhash (Actual):  ", actualHex);
+  if (expectedHex !== actualHex) {
+    console.log(chalk.redBright("Feedhash mismatch!"));
+  } else {
+    console.log(chalk.greenBright("Feedhash matches!"));
+    // const simulate = await client.simulateFeeds([stored.feedHash]);
+    // console.log(
+    //   JSON.stringify(
+    //     simulate.map((s) => s.results),
+    //     null,
+    //     2
+    //   )
+    // );
+  }
 })();
