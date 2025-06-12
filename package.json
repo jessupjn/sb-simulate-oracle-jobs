@@ -4,8 +4,8 @@
   "module": "index.ts",
   "scripts": {},
   "dependencies": {
-    "@switchboard-xyz/on-demand": "^2.4.0",
-    "@switchboard-xyz/common": "^3.0.12",
+    "@switchboard-xyz/on-demand": "^2.10.2",
+    "@switchboard-xyz/common": "^3.4.0",
     "chalk": "^5.4.1"
   },
   "devDependencies": {
